@@ -167,14 +167,14 @@ def train_bpe(
     return (vocab, merge_list)
 
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+# script_dir = os.path.dirname(os.path.abspath(__file__))
 
-file_path = os.path.join(script_dir, "..", "data/owt_train.txt")
+# file_path = os.path.join(script_dir, "..", "data/owt_train.txt")
 
-bpe = train_bpe(file_path, 32000, ["<|endoftext|>"])
+# bpe = train_bpe(file_path, 32000, ["<|endoftext|>"])
 
-# print(max(bpe[0].values(), key=len))
+# # print(max(bpe[0].values(), key=len))
 
-with open('bpe_output_test.txt', 'w') as f:
-    f.write('Vocabulary = ' + str(bpe[0]) + '\n')
-    f.write('Merges = ' + str(bpe[1]) + '\n')
+# with open('bpe_output_test.txt', 'w') as f:
+#     f.write('Vocabulary = ' + str(bpe[0]) + '\n')
+#     f.write('Merges = ' + str(bpe[1]) + '\n')
