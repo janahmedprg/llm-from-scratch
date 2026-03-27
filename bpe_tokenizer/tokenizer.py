@@ -1,7 +1,6 @@
 from typing import Iterable, Iterator
 import ast
 import regex as re
-import os
 
 class Tokenizer:
 
@@ -143,15 +142,3 @@ class Tokenizer:
             for bid in ids
         )
         return bytes_str.decode("utf-8", errors="replace")
-
-
-# script_dir = os.path.dirname(os.path.abspath(__file__))
-
-# vocab_path = os.path.join(script_dir, "..", "vocab.txt")
-# merges_path = os.path.join(script_dir, "..", "merges.txt")
-
-# tokenizer = Tokenizer.from_files(vocab_path, merges_path, ["<|endoftext|>"])
-
-# s = "Hello, how <|endoftext|>This is some random text that I want to make up to test the iterable generator<|endoftext|> are you?<|endoftext|> Is this fine to do? Can you help me with testing this? <|endoftext|>"
-# print(tokenizer.encode(s))
-# print([x for x in tokenizer.encode_iterable([s[i:i+len(s)//4] for i in range(0, len(s), len(s)//4)] )])
