@@ -1,7 +1,7 @@
 import math
 import torch
 from torch import nn
-from src.softmax import Softmax
+from src.modules.softmax import Softmax
 
 class ScaledDotProductAttention(nn.Module):
     def __init__(self):
