@@ -5,7 +5,6 @@ from src.modules.rope import RotaryPositionalEmbedding
 from src.modules.embedding import Embedding
 from src.modules.rmsnorm import RMSNorm
 from src.modules.linear import Linear
-from src.modules.softmax import Softmax
 
 class TransformerLM(nn.Module):
 
