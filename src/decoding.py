@@ -1,12 +1,12 @@
 import torch
 import json
 
-from src.transformer_lm import TransformerLM
-from src.checkpointing import load_checkpoint
-from src.rope import RotaryPositionalEmbedding
-from src.adamw import AdamW
-from src.tokenizer import Tokenizer
-from src.softmax import Softmax
+from src.models.transformer_lm import TransformerLM
+from src.training.checkpointing import load_checkpoint
+from src.models.rope import RotaryPositionalEmbedding
+from src.optim.adamw import AdamW
+from src.bpe_tokenizer.tokenizer import Tokenizer
+from src.models.softmax import Softmax
 import warnings
 warnings.filterwarnings("ignore", message=".*hipBLASLt.*")
 

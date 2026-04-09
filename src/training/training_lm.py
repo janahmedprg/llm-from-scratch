@@ -1,11 +1,11 @@
-from src.data_loading import get_batch
-from src.transformer_lm import TransformerLM
-from src.adamw import AdamW
-from src.checkpointing import load_checkpoint, save_checkpoint
-from src.rope import RotaryPositionalEmbedding
-from src.cross_entropy import CrossEntropy
-from src.gradient_clipping import gradient_clipping
-from src.learning_rate_schedule import learning_rate_schedule
+from src.training.data_loading import get_batch
+from src.models.transformer_lm import TransformerLM
+from src.optim.adamw import AdamW
+from src.training.checkpointing import load_checkpoint, save_checkpoint
+from src.models.rope import RotaryPositionalEmbedding
+from models.losses.cross_entropy import CrossEntropy
+from src.optim.gradient_clipping import gradient_clipping
+from src.optim.learning_rate_schedule import learning_rate_schedule
 import random
 import time
 import json
