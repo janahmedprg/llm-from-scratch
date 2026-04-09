@@ -1,2 +1,4 @@
 data
 tokenized_data
+__pycache__
+*.pt
