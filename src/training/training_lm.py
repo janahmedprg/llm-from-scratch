@@ -3,7 +3,7 @@ from src.models.transformer_lm import TransformerLM
 from src.optim.adamw import AdamW
 from src.training.checkpointing import load_checkpoint, save_checkpoint
 from src.models.rope import RotaryPositionalEmbedding
-from models.losses.cross_entropy import CrossEntropy
+from src.models.losses.cross_entropy import CrossEntropy
 from src.optim.gradient_clipping import gradient_clipping
 from src.optim.learning_rate_schedule import learning_rate_schedule
 import random

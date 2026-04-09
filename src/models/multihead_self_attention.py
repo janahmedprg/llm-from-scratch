@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from src.modules.scaled_dot_product_attention import ScaledDotProductAttention
-from src.modules.linear import Linear
+from src.models.scaled_dot_product_attention import ScaledDotProductAttention
+from src.models.linear import Linear
 
 
 class MultiHeadSelfAttention(nn.Module):

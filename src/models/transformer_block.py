@@ -1,9 +1,9 @@
 import torch
 from torch import nn
-from src.modules.rope import RotaryPositionalEmbedding
-from src.modules.multihead_self_attention import MultiHeadSelfAttention
-from src.modules.rmsnorm import RMSNorm
-from src.modules.swiglu import SwiGLU
+from src.models.rope import RotaryPositionalEmbedding
+from src.models.multihead_self_attention import MultiHeadSelfAttention
+from src.models.rmsnorm import RMSNorm
+from src.models.swiglu import SwiGLU
 
 class TransformerBlock(nn.Module):
 

@@ -1,10 +1,10 @@
 import torch
 from torch import nn
-from src.modules.transformer_block import TransformerBlock
-from src.modules.rope import RotaryPositionalEmbedding
-from src.modules.embedding import Embedding
-from src.modules.rmsnorm import RMSNorm
-from src.modules.linear import Linear
+from src.models.transformer_block import TransformerBlock
+from src.models.rope import RotaryPositionalEmbedding
+from src.models.embedding import Embedding
+from src.models.rmsnorm import RMSNorm
+from src.models.linear import Linear
 
 class TransformerLM(nn.Module):
 
