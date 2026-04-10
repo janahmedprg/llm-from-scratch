@@ -28,5 +28,5 @@
   "d_ff": 1344,
   "theta": 10000.0,
   "experiment_root": "experiments",
-  "experiment_name": "tiny_model"
+  "experiment_name": "tiny_model_v1"
 }
