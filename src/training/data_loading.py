@@ -1,22 +1,16 @@
 import numpy.typing as npt
+import numpy as np
 import torch
-import random
 
 def get_batch(
     dataset: npt.NDArray, batch_size: int, context_length: int, device: str
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    inputs = []
-    targets = []
-
     max_start = len(dataset) - context_length - 1
+    indices = np.random.randint(0, max_start + 1, size=batch_size)
 
-    for _ in range(batch_size):
-        idx = random.randint(0, max_start)
+    inputs_np = np.stack([dataset[idx : idx + context_length] for idx in indices])
+    targets_np = np.stack([dataset[idx + 1 : idx + context_length + 1] for idx in indices])
 
-        inputs.append(dataset[idx : idx + context_length])
-        targets.append(dataset[idx + 1 : idx + context_length + 1])
-
-    inputs = torch.tensor(inputs, dtype=torch.long, device=device)
-    targets = torch.tensor(targets, dtype=torch.long, device=device)
-
+    inputs = torch.from_numpy(inputs_np.astype(np.int64)).to(device)
+    targets = torch.from_numpy(targets_np.astype(np.int64)).to(device)
     return inputs, targets
