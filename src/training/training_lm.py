@@ -141,6 +141,7 @@ def main():
         eval_iters = cfg["eval_iters"]
         log_interval = cfg["log_interval"]
         save_interval = cfg["save_interval"]
+        max_train_seconds = cfg.get("max_train_seconds")
         checkpoint_path = cfg["checkpoint_path"]
         resume = cfg["resume"]
         seed = cfg["seed"]
@@ -173,6 +174,8 @@ def main():
         eval_iters = int(input("Eval iters (default 50): ") or 50)
         log_interval = int(input("Log interval (default 50): ") or 50)
         save_interval = int(input("Save interval (default 1000): ") or 1000)
+        max_train_seconds_input = input("Max train seconds (default no limit): ")
+        max_train_seconds = float(max_train_seconds_input) if max_train_seconds_input else None
         checkpoint_path = input("Checkpoint path (default checkpoint.pt): ") or "checkpoint.pt"
         resume = input("Resume? (y/n): ").strip().lower() == "y"
         seed = int(input("Seed (default 42): ") or 42)
@@ -221,6 +224,7 @@ def main():
         "eval_iters": eval_iters,
         "log_interval": log_interval,
         "save_interval": save_interval,
+        "max_train_seconds": max_train_seconds,
         "checkpoint_path": checkpoint_path,
         "resume": resume,
         "seed": seed,
@@ -282,8 +286,10 @@ def main():
     model.train()
     criterion = CrossEntropy()
     train_start_time = time.perf_counter()
+    final_iteration = start_iter - 1
 
     for iteration in range(start_iter, max_iters + 1):
+        final_iteration = iteration
         lr = learning_rate_schedule(
             t=iteration,
             alpha_max=learning_rate,
@@ -347,7 +353,23 @@ def main():
             save_checkpoint(model, optimizer, iteration, checkpoint_path)
             print(f"Saved checkpoint to {checkpoint_path}")
 
-    save_checkpoint(model, optimizer, max_iters, checkpoint_path)
+        if max_train_seconds is not None and wallclock_seconds >= max_train_seconds:
+            save_checkpoint(model, optimizer, iteration, checkpoint_path)
+            print(
+                f"Reached max_train_seconds={max_train_seconds:.0f}; "
+                f"saved checkpoint at iteration {iteration} to {checkpoint_path}"
+            )
+            append_metrics_csv(
+                metrics_csv_path,
+                "time_limit",
+                iteration,
+                wallclock_seconds,
+                lr,
+                loss.item(),
+            )
+            break
+
+    save_checkpoint(model, optimizer, final_iteration, checkpoint_path)
     print(f"Final checkpoint saved to {checkpoint_path}")
 
 
