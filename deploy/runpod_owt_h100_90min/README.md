@@ -4,7 +4,7 @@ This folder packages `experiments/owt_h100_90min/owt_h100_90min.pt` as a RunPod 
 
 ## Files
 
-- `Dockerfile`: builds the CUDA/PyTorch worker image.
+- `Dockerfile`: builds the CUDA 12.8/PyTorch worker image.
 - `handler.py`: RunPod Serverless handler that loads the model and serves inference.
 - `requirements.txt`: Python dependencies used inside the image.
 - `Dockerfile.dockerignore`: keeps caches and training data out of the Docker build context.
@@ -18,22 +18,61 @@ Build from the repo root so the Dockerfile can copy `src`, tokenizer files, conf
 ```bash
 docker build --platform linux/amd64 \
   -f deploy/runpod_owt_h100_90min/Dockerfile \
-  -t docker.io/YOUR_USER/owt-h100-90min:latest .
+  -t docker.io/janahmed/owt-h100-90min:latest .
 
-docker push docker.io/YOUR_USER/owt-h100-90min:latest
+docker push docker.io/janahmed/owt-h100-90min:latest
 ```
 
-The checkpoint is baked into the image, so the image will be large.
+The checkpoint is loaded from RunPod's Hugging Face model cache when `MODEL_ID` is set, so the image does not bake in `owt_h100_90min.pt`.
+
+## Push Model to Hugging Face
+
+Create a Hugging Face model repo, then upload the checkpoint, config, and tokenizer files:
+
+```bash
+hf repo create janahmed/owt-h100-90min --type model --private
+
+hf upload janahmed/owt-h100-90min \
+  experiments/owt_h100_90min/owt_h100_90min.pt \
+  owt_h100_90min.pt
+
+hf upload janahmed/owt-h100-90min \
+  experiments/owt_h100_90min/config.json \
+  config.json
+
+hf upload janahmed/owt-h100-90min \
+  tokenizer_params/owt_vocab.txt \
+  owt_vocab.txt
+
+hf upload janahmed/owt-h100-90min \
+  tokenizer_params/owt_merges.txt \
+  owt_merges.txt
+```
+
+In the RunPod endpoint settings, set the cached model field to `janahmed/owt-h100-90min`. For private repos, also provide a Hugging Face access token in RunPod.
 
 ## Create the Serverless Endpoint
 
 ```bash
 export RUNPOD_API_KEY=...
 python3 deploy/runpod_owt_h100_90min/deploy_endpoint.py \
-  --image docker.io/YOUR_USER/owt-h100-90min:latest
+  --image docker.io/janahmed/owt-h100-90min:latest \
+  --model-id janahmed/owt-h100-90min
 ```
 
-The helper creates a private template and a GPU Serverless endpoint. It defaults to one RTX 4090 worker, with zero warm workers.
+The helper creates a private template and a GPU Serverless endpoint, with zero warm workers. By default, it uses RunPod GPU pools in this order: `GpuGroup.AMPERE_16`, then `GpuGroup.AMPERE_24`.
+
+Default GPU pools:
+
+- `GpuGroup.AMPERE_16`: NVIDIA RTX A4000, NVIDIA RTX 4000 Ada, NVIDIA RTX 2000 Ada
+- `GpuGroup.AMPERE_24`: NVIDIA RTX A4500, NVIDIA RTX A5000, NVIDIA GeForce RTX 3090
+
+```bash
+python3 deploy/runpod_owt_h100_90min/deploy_endpoint.py \
+  --image docker.io/janahmed/owt-h100-90min:latest \
+  --gpu AMPERE_16 \
+  --gpu AMPERE_24
+```
 
 ## Request Shape
 

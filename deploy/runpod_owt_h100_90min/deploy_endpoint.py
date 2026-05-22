@@ -8,6 +8,7 @@ from typing import Any
 
 
 RUNPOD_REST_URL = "https://rest.runpod.io/v1"
+DEFAULT_GPU_GROUP_IDS = ["AMPERE_16", "AMPERE_24"]
 
 
 def post_json(path: str, payload: dict[str, Any], api_key: str) -> dict[str, Any]:
@@ -32,12 +33,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Create a RunPod Serverless template and endpoint for owt_h100_90min.")
     parser.add_argument("--image", required=True, help="Pushed container image, for example docker.io/user/owt-h100:latest.")
     parser.add_argument("--name", default="owt-h100-90min", help="Base name for the template and endpoint.")
-    parser.add_argument("--gpu", action="append", help="GPU type id. Repeat for fallback GPUs.")
+    parser.add_argument(
+        "--gpu",
+        action="append",
+        help="GPU group/type id. Repeat for fallback GPUs. Defaults to AMPERE_16, then AMPERE_24.",
+    )
     parser.add_argument("--workers-min", type=int, default=0)
     parser.add_argument("--workers-max", type=int, default=1)
     parser.add_argument("--idle-timeout", type=int, default=10)
     parser.add_argument("--execution-timeout-ms", type=int, default=600_000)
     parser.add_argument("--container-disk-gb", type=int, default=20)
+    parser.add_argument("--model-id", help="Hugging Face model repo id, for example USER/owt-h100-90min.")
     parser.add_argument("--api-key", default=os.environ.get("RUNPOD_API_KEY"))
     args = parser.parse_args()
 
@@ -45,7 +51,11 @@ def main() -> int:
         print("Set RUNPOD_API_KEY or pass --api-key.", file=sys.stderr)
         return 2
 
-    gpu_type_ids = args.gpu or ["NVIDIA RTX A4000"]
+    gpu_group_ids = args.gpu or DEFAULT_GPU_GROUP_IDS
+
+    env = {}
+    if args.model_id:
+        env["MODEL_ID"] = args.model_id
 
     template_payload = {
         "name": f"{args.name}-template",
@@ -58,7 +68,7 @@ def main() -> int:
         "volumeMountPath": "/workspace",
         "dockerEntrypoint": [],
         "dockerStartCmd": [],
-        "env": {},
+        "env": env,
         "ports": [],
         "readme": "Serverless worker for the owt_h100_90min TransformerLM checkpoint.",
     }
@@ -69,7 +79,7 @@ def main() -> int:
         "name": args.name,
         "templateId": template_id,
         "computeType": "GPU",
-        "gpuTypeIds": gpu_type_ids,
+        "gpuTypeIds": gpu_group_ids,
         "gpuCount": 1,
         "workersMin": args.workers_min,
         "workersMax": args.workers_max,
@@ -77,7 +87,7 @@ def main() -> int:
         "executionTimeoutMs": args.execution_timeout_ms,
         "scalerType": "QUEUE_DELAY",
         "scalerValue": 4,
-        "allowedCudaVersions": ["12.4"],
+        "allowedCudaVersions": ["12.8", "13.0"],
     }
     endpoint = post_json("/endpoints", endpoint_payload, args.api_key)
 

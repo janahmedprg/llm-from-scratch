@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+FROM nvidia/cuda:12.8.1-cudnn-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -19,7 +19,6 @@ COPY src /app/src
 COPY tokenizer_params/owt_vocab.txt /app/tokenizer_params/owt_vocab.txt
 COPY tokenizer_params/owt_merges.txt /app/tokenizer_params/owt_merges.txt
 COPY experiments/owt_h100_90min/config.json /app/experiments/owt_h100_90min/config.json
-COPY experiments/owt_h100_90min/owt_h100_90min.pt /app/experiments/owt_h100_90min/owt_h100_90min.pt
 COPY deploy/runpod_owt_h100_90min/handler.py /app/deploy/runpod_owt_h100_90min/handler.py
 
 CMD ["python3", "-u", "/app/deploy/runpod_owt_h100_90min/handler.py"]

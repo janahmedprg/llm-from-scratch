@@ -19,10 +19,12 @@ from src.models.transformer_lm import TransformerLM
 
 
 MODEL_DIR = REPO_ROOT / "experiments" / "owt_h100_90min"
-CONFIG_PATH = Path(os.environ.get("MODEL_CONFIG_PATH", MODEL_DIR / "config.json"))
-CHECKPOINT_PATH = Path(os.environ.get("MODEL_CHECKPOINT_PATH", MODEL_DIR / "owt_h100_90min.pt"))
-VOCAB_PATH = Path(os.environ.get("TOKENIZER_VOCAB_PATH", REPO_ROOT / "tokenizer_params" / "owt_vocab.txt"))
-MERGES_PATH = Path(os.environ.get("TOKENIZER_MERGES_PATH", REPO_ROOT / "tokenizer_params" / "owt_merges.txt"))
+CACHED_MODEL_ID = os.environ.get("MODEL_ID") or os.environ.get("MODEL_NAME") or os.environ.get("HF_MODEL_ID")
+HF_CACHE_ROOT = Path(os.environ.get("HF_CACHE_ROOT", "/runpod-volume/huggingface-cache/hub"))
+LOCAL_CONFIG_PATH = MODEL_DIR / "config.json"
+LOCAL_CHECKPOINT_PATH = MODEL_DIR / "owt_h100_90min.pt"
+LOCAL_VOCAB_PATH = REPO_ROOT / "tokenizer_params" / "owt_vocab.txt"
+LOCAL_MERGES_PATH = REPO_ROOT / "tokenizer_params" / "owt_merges.txt"
 SPECIAL_TOKENS = ["<|endoftext|>"]
 MAX_REQUEST_TOKENS = int(os.environ.get("MAX_REQUEST_TOKENS", "256"))
 
@@ -38,14 +40,46 @@ def _read_json(path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
+def _find_cached_model_dir(model_id: str) -> Path | None:
+    cache_name = model_id.replace("/", "--")
+    snapshots_dir = HF_CACHE_ROOT / f"models--{cache_name}" / "snapshots"
+    if not snapshots_dir.exists():
+        return None
+
+    snapshots = sorted((path for path in snapshots_dir.iterdir() if path.is_dir()), key=lambda path: path.stat().st_mtime)
+    return snapshots[-1] if snapshots else None
+
+
+def _resolve_model_paths() -> tuple[Path, Path, Path, Path]:
+    config_path = Path(os.environ.get("MODEL_CONFIG_PATH", LOCAL_CONFIG_PATH))
+    checkpoint_path = Path(os.environ.get("MODEL_CHECKPOINT_PATH", LOCAL_CHECKPOINT_PATH))
+    vocab_path = Path(os.environ.get("TOKENIZER_VOCAB_PATH", LOCAL_VOCAB_PATH))
+    merges_path = Path(os.environ.get("TOKENIZER_MERGES_PATH", LOCAL_MERGES_PATH))
+
+    if CACHED_MODEL_ID:
+        cached_model_dir = _find_cached_model_dir(CACHED_MODEL_ID)
+        if cached_model_dir is not None:
+            config_path = cached_model_dir / "config.json"
+            checkpoint_path = cached_model_dir / "owt_h100_90min.pt"
+            vocab_path = cached_model_dir / "owt_vocab.txt"
+            merges_path = cached_model_dir / "owt_merges.txt"
+            print(f"Using cached Hugging Face model from {cached_model_dir}", flush=True)
+        else:
+            print(f"Cached Hugging Face model {CACHED_MODEL_ID!r} not found under {HF_CACHE_ROOT}", flush=True)
+
+    return config_path, checkpoint_path, vocab_path, merges_path
+
+
 def _load_model() -> tuple[TransformerLM, Tokenizer, int, dict[str, Any]]:
     global MODEL, TOKENIZER, EOS_TOKEN_ID, CONFIG
 
     if MODEL is not None and TOKENIZER is not None and EOS_TOKEN_ID is not None and CONFIG is not None:
         return MODEL, TOKENIZER, EOS_TOKEN_ID, CONFIG
 
-    CONFIG = _read_json(CONFIG_PATH)
-    TOKENIZER = Tokenizer.from_files(VOCAB_PATH, MERGES_PATH, SPECIAL_TOKENS)
+    config_path, checkpoint_path, vocab_path, merges_path = _resolve_model_paths()
+
+    CONFIG = _read_json(config_path)
+    TOKENIZER = Tokenizer.from_files(vocab_path, merges_path, SPECIAL_TOKENS)
     EOS_TOKEN_ID = TOKENIZER.encode("<|endoftext|>")[0]
 
     rope = RotaryPositionalEmbedding(
@@ -66,7 +100,7 @@ def _load_model() -> tuple[TransformerLM, Tokenizer, int, dict[str, Any]]:
         device=DEVICE,
     ).to(DEVICE)
 
-    checkpoint = torch.load(CHECKPOINT_PATH, map_location=DEVICE)
+    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
     MODEL.load_state_dict(checkpoint["model_state_dict"])
     MODEL.eval()
 
