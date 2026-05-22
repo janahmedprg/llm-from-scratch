@@ -1,0 +1,9 @@
+{
+  "input": {
+    "prompt": "Once upon a time",
+    "max_new_tokens": 32,
+    "temperature": 0.8,
+    "top_p": 0.95,
+    "seed": 42
+  }
+}

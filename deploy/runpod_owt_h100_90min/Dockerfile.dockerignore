@@ -1,0 +1,9 @@
+.git
+.venv
+.uv-cache
+data
+tokenized_data
+experiments/tiny_model_v1
+experiments/owt_h100_90min/metrics.csv
+**/__pycache__
+**/*.pyc
