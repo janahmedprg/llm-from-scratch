@@ -23,7 +23,7 @@ docker build --platform linux/amd64 \
 docker push docker.io/janahmed/owt-h100-90min:latest
 ```
 
-The checkpoint is loaded from RunPod's Hugging Face model cache when `MODEL_ID` is set, so the image does not bake in `owt_h100_90min.pt`.
+The checkpoint and tokenizer files are loaded from RunPod's Hugging Face model cache when `MODEL_ID` is set, so the image does not bake in `owt_h100_90min.pt` or `tokenizer_params`.
 
 ## Push Model to Hugging Face
 
@@ -56,13 +56,21 @@ In the RunPod endpoint settings, set the cached model field to `janahmed/owt-h10
 ```bash
 export RUNPOD_API_KEY=...
 python3 deploy/runpod_owt_h100_90min/deploy_endpoint.py \
-  --image docker.io/janahmed/owt-h100-90min:latest \
-  --model-id janahmed/owt-h100-90min
+  --image docker.io/janahmed/owt-h100-90min:latest
 ```
 
-The helper creates a private template and a GPU Serverless endpoint, with zero warm workers. By default, it uses RunPod GPU pools in this order: `GpuGroup.AMPERE_16`, then `GpuGroup.AMPERE_24`.
+The helper defaults `MODEL_ID` to `janahmed/owt-h100-90min`. Override it with `--model-id` if you publish a different model repo.
+If a template with the same name already exists, use a fresh name so the new image and `MODEL_ID` environment are applied:
 
-Default GPU pools:
+```bash
+python3 deploy/runpod_owt_h100_90min/deploy_endpoint.py \
+  --image docker.io/janahmed/owt-h100-90min:latest \
+  --name owt-h100-90min-v2
+```
+
+The helper creates a private template and a GPU Serverless endpoint, with zero warm workers and a 300 second idle timeout. By default, it accepts the local aliases `AMPERE_16` and `AMPERE_24`, then expands them to the concrete GPU type ids required by RunPod's REST API.
+
+Default GPU fallback:
 
 - `GpuGroup.AMPERE_16`: NVIDIA RTX A4000, NVIDIA RTX 4000 Ada, NVIDIA RTX 2000 Ada
 - `GpuGroup.AMPERE_24`: NVIDIA RTX A4500, NVIDIA RTX A5000, NVIDIA GeForce RTX 3090

@@ -3,7 +3,9 @@
 .uv-cache
 data
 tokenized_data
+tokenizer_params
 experiments/tiny_model_v1
 experiments/owt_h100_90min/metrics.csv
+experiments/owt_h100_90min/owt_h100_90min.pt
 **/__pycache__
 **/*.pyc

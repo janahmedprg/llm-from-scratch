@@ -50,6 +50,16 @@ def _find_cached_model_dir(model_id: str) -> Path | None:
     return snapshots[-1] if snapshots else None
 
 
+def _require_paths(paths: tuple[Path, ...]) -> None:
+    missing_paths = [str(path) for path in paths if not path.exists()]
+    if missing_paths:
+        raise FileNotFoundError(
+            "Required model artifact(s) missing: "
+            + ", ".join(missing_paths)
+            + ". Set MODEL_ID to a RunPod cached Hugging Face repo, or provide explicit *_PATH env vars."
+        )
+
+
 def _resolve_model_paths() -> tuple[Path, Path, Path, Path]:
     config_path = Path(os.environ.get("MODEL_CONFIG_PATH", LOCAL_CONFIG_PATH))
     checkpoint_path = Path(os.environ.get("MODEL_CHECKPOINT_PATH", LOCAL_CHECKPOINT_PATH))
@@ -65,8 +75,9 @@ def _resolve_model_paths() -> tuple[Path, Path, Path, Path]:
             merges_path = cached_model_dir / "owt_merges.txt"
             print(f"Using cached Hugging Face model from {cached_model_dir}", flush=True)
         else:
-            print(f"Cached Hugging Face model {CACHED_MODEL_ID!r} not found under {HF_CACHE_ROOT}", flush=True)
+            raise FileNotFoundError(f"Cached Hugging Face model {CACHED_MODEL_ID!r} not found under {HF_CACHE_ROOT}")
 
+    _require_paths((config_path, checkpoint_path, vocab_path, merges_path))
     return config_path, checkpoint_path, vocab_path, merges_path
 
 
