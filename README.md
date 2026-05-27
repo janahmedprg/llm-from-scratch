@@ -96,6 +96,16 @@ Generate the combined comparison plot and one plot per experiment:
 uv run --with matplotlib python scripts/plot_metrics.py
 ```
 
+### Combined Experiment Comparison
+
+<img src="experiments/metrics.png" alt="Combined experiment metrics" width="700">
+
+### Per-Model Curves
+
+<img src="experiments/metric_plots/tiny_model_v1.png" alt="tiny_model_v1 metrics" width="600">
+
+<img src="experiments/metric_plots/owt_h100_90min.png" alt="owt_h100_90min metrics" width="600">
+
 Outputs:
 
 - `experiments/metrics.png`
