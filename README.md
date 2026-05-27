@@ -25,6 +25,52 @@ This project helped me connect the theory of LLMs to the engineering details tha
 - How validation loss, train loss, and learning-rate curves tell different parts of the training story.
 - What changes when moving from a small local experiment to a larger GPU-backed training run and then to inference serving.
 
+## Model Architecture
+
+The language model is a decoder-only GPT-style Transformer. Token IDs are embedded, passed through `num_layers` pre-norm Transformer blocks, normalized one final time, and projected back into vocabulary logits. During generation, those logits are converted into probabilities before sampling.
+
+```mermaid
+flowchart BT
+    inputs["Input token IDs<br/>(batch_size, seq_len)"]
+    embed["Token Embedding<br/>(vocab_size -> d_model)"]
+    block1["Transformer Block"]
+    dots["..."]
+    blockN["Transformer Block"]
+    finalNorm["Final RMSNorm"]
+    lmHead["Linear LM Head<br/>(d_model -> vocab_size)"]
+    logits["Output logits<br/>(batch_size, seq_len, vocab_size)"]
+    probs["Softmax / sampling probabilities"]
+
+    inputs --> embed
+    embed --> block1
+    block1 --> dots
+    dots --> blockN
+    blockN --> finalNorm
+    finalNorm --> lmHead
+    lmHead --> logits
+    logits --> probs
+```
+
+Each Transformer block uses residual connections around causal multi-head self-attention with RoPE and a SwiGLU feed-forward network.
+
+```mermaid
+flowchart TB
+    x["Input activations<br/>(batch_size, seq_len, d_model)"]
+    ln1["RMSNorm"]
+    attn["Causal Multi-Head<br/>Self-Attention + RoPE"]
+    add1["Residual Add"]
+    ln2["RMSNorm"]
+    ffn["SwiGLU Feed-Forward"]
+    add2["Residual Add"]
+    y["Output activations<br/>(batch_size, seq_len, d_model)"]
+
+    x --> ln1 --> attn --> add1
+    x --> add1
+    add1 --> ln2 --> ffn --> add2
+    add1 --> add2
+    add2 --> y
+```
+
 ## Models Trained
 
 ### `tiny_model_v1`
