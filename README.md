@@ -4,6 +4,8 @@ This repository is my end-to-end implementation of a small GPT-style language mo
 
 The goal was to learn how the moving pieces of modern language models fit together by building them directly instead of treating them as a black box.
 
+You can prompt the deployed model here: [janahmedprg.github.io](https://janahmedprg.github.io/).
+
 ## What I Built
 
 - A byte-pair encoding tokenizer with parallel pre-tokenization and learned merge rules.
